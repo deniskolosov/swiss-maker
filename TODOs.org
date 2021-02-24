@@ -1,0 +1,26 @@
+* Swiss Maker
+  Create swiss tournaments for chess and other games.
+  
+  Functionality that should be present:
+  * Create and manage a tournament
+  * Users can create and manage their profiles
+  * add more ...
+  
+  Frontend application is a SPA with several panels,
+  home page with tournament creation form, tournament page with current and previous pairings,
+  user's profile page (add more..)
+  
+  
+* Homepage [0/1]
+** TODO Initial setup [2/5]
+  * [X] Create initial db structure with mock players and tournaments
+  * [X] Install material ui
+  * [ ] Display add tournament form
+    * [ ] Initial table structure
+    * [ ] Create subscription for players
+  * [ ] Stylize form
+
+    
+
+* MISC [0/1] 
+** TODO Add initial readme
