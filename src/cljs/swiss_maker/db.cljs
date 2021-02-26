@@ -6,4 +6,5 @@
                                             :score 0}
                                            {:name "Petr Petrov"
                                             :rating 1200
-                                            :score 0}]}}})
+                                            :score 0}]}}
+   :active-modal nil})

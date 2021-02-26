@@ -10,17 +10,40 @@
   home page with tournament creation form, tournament page with current and previous pairings,
   user's profile page (add more..)
   
+ #+name: Table code snipet
+  #+begin_src clojurescript
+  [:> mui/TableContainer
+        [:> mui/Table {:aria-label "simple table"}]
+        [:> mui/TableHead
+        [:> mui/TableRow
+          [:> mui/TableCell "Name"]
+          [:> mui/TableCell "Rating/Seed number"]]]
+        [:> mui/TableBody
+        [:> mui/TableRow {:key "name"}
+          [:> mui/TableCell {:component "th" :scope "row"} "Ivan Ivanov"]
+          [:> mui/TableCell  {:component "th" :scope "row"} 1000]]]]
+  #+end_src
+
   
-* Homepage [0/1]
-** TODO Initial setup [2/5]
+* Homepage [1/1]
+** DONE Initial setup [4/5]
+   CLOSED: [2021-02-25 Thu 22:26]
   * [X] Create initial db structure with mock players and tournaments
   * [X] Install material ui
-  * [ ] Display add tournament form
-    * [ ] Initial table structure
-    * [ ] Create subscription for players
-  * [ ] Stylize form
+  * [X] Display tournaments
+    * [X] Create subscription for tournaments
+  * [X] Stylize form
 
     
+** TODO Adding tournaments
+   * [X] Add button for adding tournaments
+   * [X] Display modal with form to add tournament on button push
+     * [X] Write open modal event handler
+     * [X] Write modal layout in reusable component
+     * [X] Create subscription for modals
+   * [ ] Logic for adding tournament
+     * [ ] Event handler for adding tournaments
 
 * MISC [0/1] 
 ** TODO Add initial readme
+   

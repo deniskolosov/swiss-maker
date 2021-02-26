@@ -3,9 +3,14 @@
    [re-frame.core :as re-frame]))
 
 (re-frame/reg-sub
- ::name
+ ::tournaments
  (fn [db]
-   (:name db)))
+   (:tournaments db)))
+
+(re-frame/reg-sub
+ ::active-modal
+ (fn [db]
+   (:active-modal db)))
 
 (re-frame/reg-sub
  ::active-panel

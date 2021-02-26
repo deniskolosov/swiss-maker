@@ -14,3 +14,14 @@
  ::set-active-panel
  (fn-traced [db [_ active-panel]]
    (assoc db :active-panel active-panel)))
+
+
+(re-frame/reg-event-db
+ ::close-modal
+ (fn-traced [db [_ active-panel]]
+            (assoc db :active-modal nil)))
+
+(re-frame/reg-event-db
+ ::open-modal
+ (fn-traced [db [_ modal-name]]
+            (assoc db :active-modal modal-name)))
