@@ -33,15 +33,18 @@
                :dialog-header ""
                :body [:div [:form {:no-validate true
                                    :on-submit #(save % @values)}
-                            [form-group {:id :tournament-name
-                                         :label "Tournament name"
-                                         :type "text"
-                                         :values values}]
-                            [form-group {:id :number-of-rounds
-                                         :label "Number of rounds"
-                                         :type "number"
-                                         :values values}]
-                            ]]
+                            [:> mui/Grid {:container true
+                                          :direction "column"
+                                          :align-items "center"
+                                          :justify "center"}
+                             [form-group {:id :tournament-name
+                                          :label "Tournament name"
+                                          :type "text"
+                                          :values values}]
+                             [form-group {:id :number-of-rounds
+                                          :label "Number of rounds"
+                                          :type "number"
+                                          :values values}]]]]
                :dialog-actions [:<>
                                 [:> mui/Button
                                  {:on-click #(re-frame/dispatch [::events/close-modal])}
