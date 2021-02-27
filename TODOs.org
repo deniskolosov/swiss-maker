@@ -41,8 +41,13 @@
      * [X] Write open modal event handler
      * [X] Write modal layout in reusable component
      * [X] Create subscription for modals
-   * [ ] Logic for adding tournament
-     * [ ] Event handler for adding tournaments
+   * [X] Logic for adding tournament
+     * [X] Event handler for adding tournaments
+   * [ ] Form validation for tournament
+     * [ ] Markup for errors
+     * [ ] Logic for error validation
+       
+** TODO Deleting tournaments
 
 * MISC [0/1] 
 ** TODO Add initial readme

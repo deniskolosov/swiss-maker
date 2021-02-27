@@ -1,7 +1,9 @@
 (ns swiss-maker.db)
 
 (def default-db
-  {:tournaments {:tournament-01 {:players [{:name "Ivan Ivanov"
+  {:tournaments {:tournament-01 {:id :tournament-01
+                                 :tournament-name "First tournament"
+                                 :players [{:name "Ivan Ivanov"
                                             :rating 1100
                                             :score 0}
                                            {:name "Petr Petrov"

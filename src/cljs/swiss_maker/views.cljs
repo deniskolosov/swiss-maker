@@ -1,23 +1,26 @@
 (ns swiss-maker.views
-  (:require
-   [re-frame.core :as re-frame]
-   [swiss-maker.subs :as subs]
-   ["@material-ui/core" :as mui]
-   [swiss-maker.components.modal :refer [modal]]
-   [swiss-maker.components.form-group :refer [form-group]]
-   [reagent.core :as r]
-   [swiss-maker.events :as events]))
-
+  (:require ["@material-ui/core" :as mui]
+            [clojure.string :as str]
+            [re-frame.core :as re-frame]
+            [reagent.core :as r]
+            [swiss-maker.components.form-group :refer [form-group]]
+            [swiss-maker.components.modal :refer [modal]]
+            [swiss-maker.events :as events]
+            [swiss-maker.subs :as subs]))
 
 ;; home
 (defn create-tournament []
-  (let [initial-values {:tournament-name "ff"
-                        :number-of-players 0
+  (let [initial-values {:tournament-name ""
                         :number-of-rounds 0}
         values (r/atom initial-values)
         open-modal (fn [{:keys [modal-name tournament]}]
                      (re-frame/dispatch [::events/open-modal modal-name])
-                     (reset! values tournament))]
+                     (reset! values tournament))
+        save (fn [event {:keys [tournament-name num-of-rounds]}]
+               (.preventDefault event)
+               (re-frame/dispatch [::events/upsert-tournament {:tournament-name (str/trim tournament-name)
+                                                               :num-of-rounds (js/parseInt num-of-rounds)}])
+               (reset! values initial-values))]
     (fn []
       [:div
        [:> mui/Button {:variant "contained"
@@ -28,14 +31,11 @@
        [modal {:modal-name :create-tournament
                :dialog-title "Create tournament"
                :dialog-header ""
-               :body [:div [:form {:no-validate true}
+               :body [:div [:form {:no-validate true
+                                   :on-submit #(save % @values)}
                             [form-group {:id :tournament-name
                                          :label "Tournament name"
                                          :type "text"
-                                         :values values}]
-                            [form-group {:id :number-of-players
-                                         :label "Number of players"
-                                         :type "number"
                                          :values values}]
                             [form-group {:id :number-of-rounds
                                          :label "Number of rounds"
@@ -47,19 +47,21 @@
                                  {:on-click #(re-frame/dispatch [::events/close-modal])}
                                  "Close"]
                                 ;; dispatch create tournament event here
-                                [:> mui/Button  "Save"]]}]]
+                                [:> mui/Button
+                                 {:on-click #(save % @values)}
+                                 "Add tournament"]]}]]
       )))
 
 (defn home-panel []
-  (let [tourneys @(re-frame/subscribe [::subs/tournaments])]
+  (let [tourneys (re-frame/subscribe [::subs/tournaments])]
     (fn []
       [:<>
        [:> mui/Typography {:variant "h5"} "Active tournaments:"]
        [:> mui/List {:component "nav" :aria-label "tournament list"}
-        (for [[tourney-name _] tourneys]
-          ^{:key tourney-name}
-          [:> mui/ListItemText {:primary tourney-name}])]
-       [create-tournament]])))
+        (for [[tourney-id tournament] @tourneys]
+              ^{:key tourney-id}
+              [:> mui/ListItemText {:primary (:tournament-name tournament)}])
+        [create-tournament]]])))
 
   ;; about
 
