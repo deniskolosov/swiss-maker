@@ -22,7 +22,7 @@
                                                                :num-of-rounds (js/parseInt num-of-rounds)}])
                (reset! values initial-values))]
     (fn []
-      [:div
+      [:> mui/Box {:mt 5}
        [:> mui/Button {:variant "contained"
                        :color "secondary"
                        :on-click #(open-modal {:modal-name :create-tournament
@@ -52,37 +52,91 @@
                                 ;; dispatch create tournament event here
                                 [:> mui/Button
                                  {:on-click #(save % @values)}
-                                 "Add tournament"]]}]]
-      )))
+                                 "Add tournament"]]}]])))
 
 (defn home-panel []
   (let [tourneys (re-frame/subscribe [::subs/tournaments])]
     (fn []
       [:<>
        [:> mui/Typography {:variant "h5"} "Active tournaments:"]
-       [:> mui/List {:component "nav" :aria-label "tournament list"}
-        (for [[tourney-id tournament] @tourneys]
-              ^{:key tourney-id}
-              [:> mui/ListItemText {:primary (:tournament-name tournament)}])
-        [create-tournament]]])))
+       (for [[tourney-id tournament] @tourneys]
+         ^{:key tourney-id}
+         [:a {:href (str "#tournaments/" (name tourney-id))}
+          [:> mui/Card {:variant "outlined"
+                        :class "editable"}
+           [:> mui/CardContent
+            [:> mui/Grid {:container true :direction "row"}
+             [:> mui/Typography
+              {:variant "body1"} (:tournament-name tournament)]]]]])
+
+       [create-tournament]])))
 
   ;; about
 
-  (defn about-panel []
-    [:div
-     [:h1 "This is the About Page."]
+(defn about-panel []
+  [:div
+   [:h1 "This is the About Page."]
 
-     [:div
-      [:a {:href "#/"}
-       "go to Home Page"]]])
+   [:div
+    [:a {:href "#/"}
+     "go to Home Page"]]])
 
+(defn tournament-panel []
+  (fn []
+    (let [active-tournament @(re-frame/subscribe [::subs/tournament])]
+      [:> mui/Box
+;; <TableContainer component={Paper}>
+;;       <Table className={classes.table} size="small" aria-label="a dense table">
+;;         <TableHead>
+;;           <TableRow>
+;;             <TableCell>Dessert (100g serving)</TableCell>
+;;             <TableCell align="right">Calories</TableCell>
+;;             <TableCell align="right">Fat&nbsp;(g)</TableCell>
+;;             <TableCell align="right">Carbs&nbsp;(g)</TableCell>
+;;             <TableCell align="right">Protein&nbsp;(g)</TableCell>
+;;           </TableRow>
+;;         </TableHead>
+;;         <TableBody>
+;;           {rows.map((row) => (
+;;             <TableRow key={row.name}>
+;;               <TableCell component="th" scope="row">
+;;                 {row.name}
+;;               </TableCell>
+;;               <TableCell align="right">{row.calories}</TableCell>
+;;               <TableCell align="right">{row.fat}</TableCell>
+;;               <TableCell align="right">{row.carbs}</TableCell>
+;;               <TableCell align="right">{row.protein}</TableCell>
+;;             </TableRow>
+;;           ))}
+;;         </TableBody>
+;;       </Table>
+;;     </TableContainer>
+       [:> mui/TableContainer {:component mui/Paper}
+        [:> mui/Table {:size "small"}
+         [:> mui/TableHead
+          [:> mui/TableRow
+           [:> mui/TableCell "Player"]
+           [:> mui/TableCell "Rating"]
+           [:> mui/TableCell "Points"]]]
+         [:> mui/TableBody
+          (for [player (:players active-tournament)]
+            ^{:key (:name player)}
+            [:> mui/TableRow
+             [:> mui/TableCell (:name player)]
+             [:> mui/TableCell (:rating player)]
+             [:> mui/TableCell (:score player)]])
+          ]]]
+       [:a {:href "#/"}
+        "go to Home Page"]])))
 
 ;; main
+
 
 (defn- panels [panel-name]
   (case panel-name
     :home-panel [home-panel]
     :about-panel [about-panel]
+    :tournament-panel [tournament-panel]
     [:div]))
 
 (defn show-panel [panel-name]
@@ -94,5 +148,4 @@
     [:<>
      [:> mui/Grid {:container true :justify "center"}
       [:> mui/Grid {:item true}
-       [show-panel @active-panel]]]
-     ]))
+       [show-panel @active-panel]]]]))

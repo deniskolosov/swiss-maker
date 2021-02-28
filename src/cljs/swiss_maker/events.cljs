@@ -9,11 +9,22 @@
  (fn-traced [_ _]
    db/default-db))
 
+;; (re-frame/reg-event-db
+;;  ::set-active-panel
+;;  (fn-traced [db [_ active-panel]]
+;;    (assoc db :active-panel active-panel)))
+
 (re-frame/reg-event-db
  ::set-active-panel
- (fn-traced [db [_ active-panel]]
-   (assoc db :active-panel active-panel)))
+ (fn-traced [db [_ {:keys [active-panel tournament-id]}]]
+            (-> db
+                (assoc :active-panel active-panel)
+                (assoc :active-tournament tournament-id))))
 
+;; (re-frame/reg-event-db
+;;  ::set-active-tournament
+;;  (fn-traced [db [_ active-tournament]]
+;;             (assoc db :active-tournament active-panel)))
 
 (re-frame/reg-event-db
  ::close-modal

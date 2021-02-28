@@ -47,8 +47,19 @@
      * [ ] Markup for errors
      * [ ] Logic for error validation
        
-** TODO Deleting tournaments
-
+       
+* Tournament page
+** TODO Updating and deleting tournaments
+   * [X] Make tournaments in list link to their related pages
+   * [X] Add routing so click on tournament shows tournament page
+   * [X] Add a way to return to homepage from tournament page
+   * [ ] Display tournament info in tournament page (number of rounds, list of players)
+   * [ ] Add delete tournament button
+   * [ ] Add "Add players" button
+     * [ ] Display form for adding players on add players button press
+   * [ ] Add change number of rounds button
+   * [ ] Write logic for editing and deleting tournaments
+   
 * MISC [0/1] 
 ** TODO Add initial readme
    

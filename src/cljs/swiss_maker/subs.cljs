@@ -16,3 +16,18 @@
  ::active-panel
  (fn [db _]
    (:active-panel db)))
+
+(re-frame/reg-sub
+ ::active-tournament
+ (fn [db _]
+   (:active-tournament db)))
+
+(re-frame/reg-sub
+ ::tournament
+ :<- [::tournaments]
+ :<- [::active-tournament]
+ (fn [[tournaments active-tournament] _]
+   (get tournaments active-tournament)))
+
+(comment
+  (get {:tournament-01 {:id :tournament-01 :players [{:name "Denis"}]}} ::tournament-01))
