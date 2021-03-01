@@ -53,12 +53,17 @@
    * [X] Make tournaments in list link to their related pages
    * [X] Add routing so click on tournament shows tournament page
    * [X] Add a way to return to homepage from tournament page
-   * [ ] Display tournament info in tournament page (number of rounds, list of players)
-   * [ ] Add delete tournament button
-   * [ ] Add "Add players" button
-     * [ ] Display form for adding players on add players button press
-   * [ ] Add change number of rounds button
+   * [X] Display tournament info in tournament page (number of rounds, list of players)
+   * [X] Add delete tournament button
+   * [-] Add "Add players" button
+     * [X] Display form for adding players on add players button press
+     * [-] Add subscription and events for adding/editing players
+       * [X] Add subs for players and active player
+       * [ ] Add upsert player event
    * [ ] Write logic for editing and deleting tournaments
+     * [ ] Add edit tournament button
+     * [ ] Add change number of rounds button in form
+     * [ ] Add possibility to edit players
    
 * MISC [0/1] 
 ** TODO Add initial readme

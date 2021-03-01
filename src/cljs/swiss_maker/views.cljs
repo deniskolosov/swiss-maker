@@ -9,7 +9,7 @@
             [swiss-maker.subs :as subs]))
 
 ;; home
-(defn create-tournament []
+(defn tournament-editor []
   (let [initial-values {:tournament-name ""
                         :number-of-rounds 0}
         values (r/atom initial-values)
@@ -54,6 +54,9 @@
                                  {:on-click #(save % @values)}
                                  "Add tournament"]]}]])))
 
+;; todo subscribe to active player instead of passing values
+
+
 (defn home-panel []
   (let [tourneys (re-frame/subscribe [::subs/tournaments])]
     (fn []
@@ -69,9 +72,9 @@
              [:> mui/Typography
               {:variant "body1"} (:tournament-name tournament)]]]]])
 
-       [create-tournament]])))
+       [tournament-editor]])))
 
-  ;; about
+;; about
 
 (defn about-panel []
   [:div
@@ -81,53 +84,87 @@
     [:a {:href "#/"}
      "go to Home Page"]]])
 
+
+(defn player-row [values {:keys [id player-name rating score] :as player}]
+  (let [open-modal (fn [{:keys [modal-name]}]
+                     (re-frame/dispatch [::events/open-modal modal-name])
+                     (re-frame/dispatch [::events/set-active-player id])
+                     (reset! values player))]
+      [:> mui/TableRow
+       [:> mui/TableCell player-name]
+       [:> mui/TableCell rating]
+       [:> mui/TableCell score]
+       [:> mui/TableCell [:> mui/Button {:on-click #(open-modal
+                                                     {:modal-name :edit-player})} "Edit"]]]))
+
 (defn tournament-panel []
-  (fn []
-    (let [active-tournament @(re-frame/subscribe [::subs/tournament])]
-      [:> mui/Box
-;; <TableContainer component={Paper}>
-;;       <Table className={classes.table} size="small" aria-label="a dense table">
-;;         <TableHead>
-;;           <TableRow>
-;;             <TableCell>Dessert (100g serving)</TableCell>
-;;             <TableCell align="right">Calories</TableCell>
-;;             <TableCell align="right">Fat&nbsp;(g)</TableCell>
-;;             <TableCell align="right">Carbs&nbsp;(g)</TableCell>
-;;             <TableCell align="right">Protein&nbsp;(g)</TableCell>
-;;           </TableRow>
-;;         </TableHead>
-;;         <TableBody>
-;;           {rows.map((row) => (
-;;             <TableRow key={row.name}>
-;;               <TableCell component="th" scope="row">
-;;                 {row.name}
-;;               </TableCell>
-;;               <TableCell align="right">{row.calories}</TableCell>
-;;               <TableCell align="right">{row.fat}</TableCell>
-;;               <TableCell align="right">{row.carbs}</TableCell>
-;;               <TableCell align="right">{row.protein}</TableCell>
-;;             </TableRow>
-;;           ))}
-;;         </TableBody>
-;;       </Table>
-;;     </TableContainer>
-       [:> mui/TableContainer {:component mui/Paper}
-        [:> mui/Table {:size "small"}
-         [:> mui/TableHead
-          [:> mui/TableRow
-           [:> mui/TableCell "Player"]
-           [:> mui/TableCell "Rating"]
-           [:> mui/TableCell "Points"]]]
-         [:> mui/TableBody
-          (for [player (:players active-tournament)]
-            ^{:key (:name player)}
-            [:> mui/TableRow
-             [:> mui/TableCell (:name player)]
-             [:> mui/TableCell (:rating player)]
-             [:> mui/TableCell (:score player)]])
-          ]]]
+  (let [active-tournament (re-frame/subscribe [::subs/tournament])
+        initial-values {:player-name ""
+                        :rating 0
+                        :score 0}
+        values (r/atom initial-values)
+        save-player (fn [event {:keys [id player-name rating score]}]
+                      (.preventDefault event)
+                      (re-frame/dispatch [::events/upsert-player
+                                          {:id id
+                                           :player-name (str/trim player-name)
+                                           :rating (js/parseInt rating)
+                                           :score (js/parseInt score)}])
+                      (reset! values initial-values))]
+    (fn []
+      [:> mui/Grid {:container true}
        [:a {:href "#/"}
-        "go to Home Page"]])))
+        "go to Home Page"]
+       [:> mui/Grid {:container true :direction "row"}
+        [:> mui/TableContainer {:component mui/Paper}
+         [:> mui/Table {:size "small"}
+          [:> mui/TableHead
+           [:> mui/TableRow
+            [:> mui/TableCell "Player"]
+            [:> mui/TableCell "Rating"]
+            [:> mui/TableCell "Points"]]]
+          [:> mui/TableBody
+           (for [[player-id {:keys [id player-name rating score]}] (:players @active-tournament)]
+             ^{:key player-id}
+             [player-row values {:id id
+                                 :player-name player-name
+                                 :rating rating
+                                 :score  score}])]]]
+
+        [:> mui/Button {:variant "contained"} "Add players" ]]
+       [:> mui/Box {:mt 5}
+        [:> mui/Button
+         {:variant "contained"
+          :color "secondary"
+          :size "small"
+          :on-click #()}
+         "Delete tournament"]]
+
+       [modal {:modal-name :edit-player
+               :dialog-title "Edit players"
+               :dialog-header ""
+               :body [:> mui/Box [:form {:no-validate true
+                                         :on-submit #(save-player % @values)}
+                                  [:> mui/Grid {:container true
+                                                :direction "column"
+                                                :align-items "center"
+                                                :justify "center"}
+                                   [form-group {:id :player-name
+                                                :label "Player name"
+                                                :type "text"
+                                                :values values}]
+                                   [form-group {:id :rating
+                                                :label "Player rating"
+                                                :type "number"
+                                                :values values}]]]]
+               :dialog-actions [:<>
+                                [:> mui/Button
+                                 {:on-click #(re-frame/dispatch [::events/close-modal])}
+                                 "Close"]
+                                [:> mui/Button
+                                 {:on-click #(save-player % @values)}
+                                 "Save player"]]}]
+       ])))
 
 ;; main
 

@@ -29,5 +29,24 @@
  (fn [[tournaments active-tournament] _]
    (get tournaments active-tournament)))
 
+
+(re-frame/reg-sub
+ ::players
+ :<- [::tournament]
+ (fn [tournament _]
+   (:players tournament)))
+
+(re-frame/reg-sub
+ ::active-player
+ (fn [db _]
+   (:active-player db)))
+
+(re-frame/reg-sub
+ ::player
+ :<- [::players]
+ :<- [::active-player]
+ (fn [[players active-player] _]
+   (get players active-player)))
+
 (comment
   (get {:tournament-01 {:id :tournament-01 :players [{:name "Denis"}]}} ::tournament-01))

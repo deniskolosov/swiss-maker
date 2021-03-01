@@ -9,10 +9,6 @@
  (fn-traced [_ _]
    db/default-db))
 
-;; (re-frame/reg-event-db
-;;  ::set-active-panel
-;;  (fn-traced [db [_ active-panel]]
-;;    (assoc db :active-panel active-panel)))
 
 (re-frame/reg-event-db
  ::set-active-panel
@@ -21,15 +17,18 @@
                 (assoc :active-panel active-panel)
                 (assoc :active-tournament tournament-id))))
 
-;; (re-frame/reg-event-db
-;;  ::set-active-tournament
-;;  (fn-traced [db [_ active-tournament]]
-;;             (assoc db :active-tournament active-panel)))
+(re-frame/reg-event-db
+ ::set-active-player
+ (fn-traced [db [_ player-id]]
+            (-> db
+                (assoc :active-player player-id))))
 
 (re-frame/reg-event-db
  ::close-modal
  (fn-traced [db [_ active-panel]]
-            (assoc db :active-modal nil)))
+            (-> db
+                (assoc :active-modal nil)
+                (assoc :active-player nil))))
 
 (re-frame/reg-event-db
  ::open-modal
@@ -47,6 +46,21 @@
                                                 :players []})
          ;; close modal
          (assoc-in [:active-modal] nil)))))
+
+
+(re-frame/reg-event-db
+ ::upsert-player
+ (fn [db [_ {:keys [id player-name rating score]}]]
+   (let [tournament-id (get-in db [:active-tournament])
+         player-id (get-in db [:active-player])
+         id (or player-id (keyword (str "player-" (random-uuid))))]
+     (-> db (update-in [:tournaments tournament-id :players id] merge {:id id
+                                                                       :player-name player-name
+                                                                       :rating rating
+                                                                       :score (or score 0)})
+         ;; close modal
+         (assoc-in [:active-modal] nil)))))
+
 
 ;; {:db (update-in db [:tournaments id] merge {:id tournament-id
 ;;                                             :tournament-name tournament-name
