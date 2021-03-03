@@ -49,22 +49,39 @@
        
        
 * Tournament page
-** TODO Updating and deleting tournaments
+** DONE Updating tournaments
+   CLOSED: [2021-03-02 Tue 13:27]
    * [X] Make tournaments in list link to their related pages
    * [X] Add routing so click on tournament shows tournament page
    * [X] Add a way to return to homepage from tournament page
    * [X] Display tournament info in tournament page (number of rounds, list of players)
    * [X] Add delete tournament button
-   * [-] Add "Add players" button
+   * [X] Add "Add players" button
      * [X] Display form for adding players on add players button press
-     * [-] Add subscription and events for adding/editing players
+     * [X] Add subscription and events for adding/editing players
        * [X] Add subs for players and active player
-       * [ ] Add upsert player event
-   * [ ] Write logic for editing and deleting tournaments
-     * [ ] Add edit tournament button
-     * [ ] Add change number of rounds button in form
-     * [ ] Add possibility to edit players
-   
+       * [X] Add upsert player event
+   * [X] Add possibility to edit players
+** DONE Adding new players
+   CLOSED: [2021-03-02 Tue 13:40]
+   * [X] Show modal on add players button press
+   * [X] Logic for adding players
+** DONE Delete players
+   CLOSED: [2021-03-02 Tue 14:19]
+   * [X] Button for deleting players inside editing form(not adding)
+   * [X] Event for deleting players
+** DONE Deleting tournaments
+   CLOSED: [2021-03-02 Tue 15:02]
+   * [ ] Event for deleting tournaments (redirect to homepage after deleting)
+** TODO Create pairings interface
+   * [X] Add "Start round" button
+   * [X] Add sub for current round and event for updating it
+   * [X] Display pairs for current round
+   * [X] Add input select for the result
+   * [ ] Add on-change event to select
+   * [ ] Add "Finish round" button
+   * [ ] Display previous results in an accordion
+** TODO Create pairings mechanism
 * MISC [0/1] 
 ** TODO Add initial readme
    

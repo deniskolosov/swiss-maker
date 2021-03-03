@@ -48,5 +48,17 @@
  (fn [[players active-player] _]
    (get players active-player)))
 
+(re-frame/reg-sub
+ ::current-round
+ :<- [::tournament]
+ (fn [tournament _]
+   (:current-round tournament)))
+
+(re-frame/reg-sub
+ ::current-pairings
+ :<- [::tournament]
+ (fn [tournament _]
+   (:pairings tournament)))
+
 (comment
   (get {:tournament-01 {:id :tournament-01 :players [{:name "Denis"}]}} ::tournament-01))

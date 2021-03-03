@@ -1,0 +1,15 @@
+body {
+    background: #F5F5DC;
+}
+
+.editable {
+    opacity: 1;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.editable:hover {
+    cursor: pointer;
+    box-shadow: 0px 5px 14px 0px rgba(0,0,0,0.8);
+    opacity: 0.8;
+}
+

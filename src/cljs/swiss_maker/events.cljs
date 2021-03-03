@@ -47,6 +47,13 @@
          ;; close modal
          (assoc-in [:active-modal] nil)))))
 
+(re-frame/reg-event-db
+ ::delete-tournament
+ (fn [db [_ tournament-id]]
+   (-> db
+       (update-in [:tournaments] dissoc tournament-id)
+       (assoc-in [:active-tournament] nil)
+       (assoc-in [:active-panel] :home-panel))))
 
 (re-frame/reg-event-db
  ::upsert-player
@@ -61,14 +68,33 @@
          ;; close modal
          (assoc-in [:active-modal] nil)))))
 
+(re-frame/reg-event-db
+ ::delete-player
+ (fn [db [_ player-id]]
+   (let [active-tournament (get-in db [:active-tournament])]
+     (-> db
+         (update-in [:tournaments active-tournament :players] dissoc player-id)
+         (assoc-in [:active-player] nil)
+         (assoc-in [:active-modal] nil)))))
 
-;; {:db (update-in db [:tournaments id] merge {:id tournament-id
-;;                                             :tournament-name tournament-name
-;;                                             :players []
-;;                                             :num-of-rounds num-of-rounds})
-;;  :dispatch [::close-modal]}
+
+
+(re-frame/reg-event-db
+ ::start-round
+ (fn [db [_ tournament-id]]
+   (-> db
+       (update-in [:tournaments tournament-id :current-round] inc)
+       (update-in [:tournaments tournament-id :pairings] merge {1 { :player-01 :player-02}}))))
+
+;; (re-frame/reg-event-db
+;;  ::create-pairings
+;;  (fn [db [_ tournament-id]]
+;;    (update-in db [:tournaments tournament-id :pairings] merge {:player-01 :player-02})))
+
+
+
 (comment
   (random-uuid)
-  (update-in {:tournaments {:tourn-1 {:players {:name "Denis"}}}} [:tournaments :new-id] merge {:id "new-id"
-                                                                                                 :name "Denis"})
+  (update-in {:hello {:world 1}} [:hello :world] inc)
+  (update-in {:hello {:world 1 :bar {}}} [:hello :bar] merge {:foo :baz})
   )
