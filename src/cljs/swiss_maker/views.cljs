@@ -215,13 +215,13 @@
                 (for [[board-id res] results-map]
                   ^{:key board-id}
                   [:<>
-                   [:> mui/Typography (str (name board-id) " : ")
-                    (case res
-                      0 (str "1 - 0")
-                      1 (str "0 - 1")
-                      0.5 (str "1/2 - 1/2"))
-                    ]
-                   [:> mui/Divider]
+                   [:> mui/Box
+                    [:> mui/Typography (str (name board-id) " : ")
+                     (case res
+                       0 (str "1 - 0")
+                       1 (str "0 - 1")
+                       0.5 (str "1/2 - 1/2"))
+                     ]]
                    ]
                   )
                 ]]))]
