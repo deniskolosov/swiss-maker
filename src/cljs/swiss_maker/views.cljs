@@ -1,5 +1,6 @@
 (ns swiss-maker.views
   (:require ["@material-ui/core" :as mui]
+            ["@material-ui/icons" :as icons]
             [clojure.string :as str]
             [re-frame.core :as re-frame]
             [reagent.core :as r]
@@ -104,40 +105,48 @@
   []
   (let [current-round @(re-frame/subscribe [::subs/current-round])
         pairings @(re-frame/subscribe [::subs/current-pairings])
+
         players @(re-frame/subscribe [::subs/players])
-        initial-values (into {} (map #(assoc {} (first %) "") pairings)) ;; constructs {1 "" 2 ""} ,etc
-        values (r/atom initial-values)]
+        tournament-id @(re-frame/subscribe [::subs/active-tournament])
+        update-result (fn [event board-no]
+                        (let [event-value (.. event -target -value)]
+                          (.preventDefault event)
+                          (when (not= event-value "")
+                            (re-frame/dispatch [::events/update-scores {:board-no board-no
+                                                                        :result event-value
+                                                                        :tournament-id tournament-id}])
+                            (re-frame/dispatch [::events/update-results {:board-no board-no
+                                                                        :result event-value
+                                                                        :tournament-id tournament-id}]))))]
     [:> mui/Grid {:container true}
      (if (> current-round 0 )
        [:> mui/Grid {:item true }
         [:> mui/Typography {:variant "h5"} "Current round pairs:"]
         [:form {:no-validate true}
-         (for [[board-no pair] pairings]
-           (let [white-id (first (map key pair))
-                 black-id (first (map val pair))]
+         (for [[board-no result-map] pairings]
+           (let [white-id (:white result-map)
+                 black-id (:black result-map)]
              ^{:key white-id}
-
              [:> mui/Paper
               [:> mui/Typography {:variant "body1"}
                (str "Board #" board-no ": "
                     (get-in players [white-id :player-name]) " (white) -- "
                     (get-in players [black-id :player-name]) " (black)")]
-              [:> mui/FormControl {:variant "outlined"}
+              [:> mui/FormControl {:variant "outlined"
+                                   :disabled (if (= (:result result-map) "") false true)}
                ^{:key white-id}
                [:> mui/InputLabel {:id "hello-123"} "Result"]
-               [:> mui/Select {:value 0
-                               :id "hello123123"
-                               :on-change #()
+               [:> mui/Select {:value (:result result-map)
+                               :id "result-select"
+                               :on-change #(update-result % board-no)
                                :label "Result"}
                 [:> mui/MenuItem {:value 0} "White won" ]
                 [:> mui/MenuItem {:value 1} "Black won" ]
-                [:> mui/MenuItem {:value 2} "Draw" ]]]]))]]
+                [:> mui/MenuItem {:value 0.5} "Draw" ]]]]))]
+        [:> mui/Button {:variant "contained"
+                        :on-click #(re-frame/dispatch [::events/finish-round current-round])} "Finish round"]]
        [:> mui/Box "Make pairings"])]))
 
-(comment
-  (for [[board-no pair] {1 {:player-1 :player-2}}] [board-no (type pair)])
-  (first (map key {:a :b}))
-  (get-in  {:player-01 {:name "Denis"}} [:player-01 :name]))
 
 (defn tournament-panel []
 
@@ -193,6 +202,29 @@
                          (set! (.. js/window -location -href) "/"))}
            "Delete tournament"]]
 
+         ;; display previous results
+         [:> mui/Grid {:container true}
+          (let [results @(re-frame/subscribe [::subs/results])]
+            (for [[round-no results-map] results]
+              ^{:key round-no}
+              [:> mui/Accordion
+               [:> mui/AccordionSummary {:expand-icon icons/ExpandMoreIcon}
+                [:> mui/Typography (str "Round " round-no " results:")]]
+               [:> mui/AccordionDetails
+                ;; todo rewrite using List
+                (for [[board-id res] results-map]
+                  ^{:key board-id}
+                  [:<>
+                   [:> mui/Typography (str (name board-id) " : ")
+                    (case res
+                      0 (str "1 - 0")
+                      1 (str "0 - 1")
+                      0.5 (str "1/2 - 1/2"))
+                    ]
+                   [:> mui/Divider]
+                   ]
+                  )
+                ]]))]
 
          ;; display current pairings
          [current-round]

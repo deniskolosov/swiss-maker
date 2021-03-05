@@ -84,17 +84,69 @@
  (fn [db [_ tournament-id]]
    (-> db
        (update-in [:tournaments tournament-id :current-round] inc)
-       (update-in [:tournaments tournament-id :pairings] merge {1 { :player-01 :player-02}}))))
+       ;; fixture
+       (update-in [:tournaments tournament-id :pairings] merge {:board-1 {:white :player-01
+                                                                          :black :player-02
+                                                                          :result ""}
+                                                                :board-2 {:white :player-03
+                                                                          :black :player-04
+                                                                          :result ""}}))))
 
-;; (re-frame/reg-event-db
-;;  ::create-pairings
-;;  (fn [db [_ tournament-id]]
-;;    (update-in db [:tournaments tournament-id :pairings] merge {:player-01 :player-02})))
 
+(re-frame/reg-event-db
+ ::update-scores
+ (fn [db [_ {:keys [board-no result tournament-id]}]]
 
+   (let [players ((juxt :white :black) (get-in db [:tournaments tournament-id :pairings board-no]))]
+     ;; update pairings map ;; (o white won, 0.5 draw, 1 black won)
+
+     (if-let [winner (case result 0 (first players) 1 (second players) 0.5 nil)]
+       (update-in db [:tournaments tournament-id :players winner :score] inc)
+       (reduce #(update-in % [:tournaments :tournament-01 :players %2 :score] (partial + 0.5))
+               db players)))))
+
+(re-frame/reg-event-db
+ ::update-results
+ (fn [db [_ {:keys [board-no result tournament-id]}]]
+   (assoc-in db [:tournaments tournament-id :pairings board-no :result] result)))
+
+(re-frame/reg-event-db
+ ::finish-round
+ (fn [db [_ current-round]]
+   (let [tournament-id (get db :active-tournament)
+         pairings (get-in db [:tournaments tournament-id :pairings])]
+     (-> db
+         (assoc-in [:tournaments tournament-id :results current-round]
+                   (reduce #(assoc-in % [(first %2)] (:result (second %2))) {} pairings))
+         (assoc-in [:tournaments tournament-id :pairings] {})))))
 
 (comment
+
+  ( (juxt :white :black) {:white :player-01
+    :black :player-02
+    :result ""})
+  (def result 2)
+  (def players {:player-01 :player-02})
+  (def m {:tournaments {:tournament-01 {:results {}
+                                        :players {:player-01 {:score 0}
+                                                  :player-02 {:score 0}}}}})
+  (def p {:board-1 {:white :player-01
+                    :black :player-02
+                    :result 0}
+          :board-2 {:white :player-03
+                    :black :player-04
+                    :result 1}})
+  (reduce #(assoc-in % [(first %2)] (:result (second %2))) {} p)
+  (assoc-in m [:tournaments :tournament-01 :results 1] (reduce #(assoc-in % [(first %2)] (:result (second %2))) {} p))
+
+
+  (if-let [winner (case result 0 (first (map val players)) 1 (first (map key players)) 2 nil)]
+    (update-in m [:tournaments :tournament-01 :players winner :score] inc)
+    (reduce #(update-in % [:tournaments :tournament-01 :players %2 :score] (partial + 0.5)) m (first (seq players)))
+    )
+  (first (seq players))
+
   (random-uuid)
-  (update-in {:hello {:world 1}} [:hello :world] inc)
+  (update-in {:hello {:world 1}} [:hello :world] (partial + 2))
   (update-in {:hello {:world 1 :bar {}}} [:hello :bar] merge {:foo :baz})
   )

@@ -73,14 +73,19 @@
 ** DONE Deleting tournaments
    CLOSED: [2021-03-02 Tue 15:02]
    * [ ] Event for deleting tournaments (redirect to homepage after deleting)
-** TODO Create pairings interface
+** DONE Create pairings interface
+   CLOSED: [2021-03-05 Fri 17:10]
+   :PROPERTIES:
+   :ID:       01802309-09FA-466C-A2A8-13E2D2D7E2E5
+   :END:
    * [X] Add "Start round" button
    * [X] Add sub for current round and event for updating it
    * [X] Display pairs for current round
    * [X] Add input select for the result
-   * [ ] Add on-change event to select
-   * [ ] Add "Finish round" button
-   * [ ] Display previous results in an accordion
+   * [X] Add on-change event to select
+   * [X] Add "Finish round" button,
+     * [X] Create event which updates results in db from pairings
+   * [X] Display previous results in an accordion
 ** TODO Create pairings mechanism
 * MISC [0/1] 
 ** TODO Add initial readme

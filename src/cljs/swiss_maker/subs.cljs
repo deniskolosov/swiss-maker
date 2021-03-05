@@ -29,6 +29,11 @@
  (fn [[tournaments active-tournament] _]
    (get tournaments active-tournament)))
 
+(re-frame/reg-sub
+ ::results
+ :<- [::tournament]
+ (fn [tournament _]
+   (get tournament :results)))
 
 (re-frame/reg-sub
  ::players
