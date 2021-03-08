@@ -1,6 +1,6 @@
 (ns swiss-maker.views
   (:require ["@material-ui/core" :as mui]
-            ["@material-ui/icons" :as icons]
+            ["@material-ui/icons/ExpandMore" :refer [ExpandMoreIcon]]
             [clojure.string :as str]
             [re-frame.core :as re-frame]
             [reagent.core :as r]
@@ -119,7 +119,7 @@
                                                                         :result event-value
                                                                         :tournament-id tournament-id}]))))]
     [:> mui/Grid {:container true}
-     (if (> current-round 0 )
+     (when (> current-round 0 )
        [:> mui/Grid {:item true }
         [:> mui/Typography {:variant "h5"} "Current round pairs:"]
         [:form {:no-validate true}
@@ -143,9 +143,10 @@
                 [:> mui/MenuItem {:value 0} "White won" ]
                 [:> mui/MenuItem {:value 1} "Black won" ]
                 [:> mui/MenuItem {:value 0.5} "Draw" ]]]]))]
-        [:> mui/Button {:variant "contained"
-                        :on-click #(re-frame/dispatch [::events/finish-round current-round])} "Finish round"]]
-       [:> mui/Box "Make pairings"])]))
+        (when (not= pairings {})
+          [:> mui/Button {:variant "contained"
+                          :on-click #(re-frame/dispatch [::events/finish-round current-round])} "Finish round"])]
+       )]))
 
 
 (defn tournament-panel []
@@ -204,11 +205,13 @@
 
          ;; display previous results
          [:> mui/Grid {:container true}
-          (let [results @(re-frame/subscribe [::subs/results])]
+          (let [results @(re-frame/subscribe [::subs/results])
+                expand-more [:> ExpandMoreIcon ]]
             (for [[round-no results-map] results]
               ^{:key round-no}
+
               [:> mui/Accordion
-               [:> mui/AccordionSummary {:expand-icon icons/ExpandMoreIcon}
+               [:> mui/AccordionSummary {:expand-icon expand-more}
                 [:> mui/Typography (str "Round " round-no " results:")]]
                [:> mui/AccordionDetails
                 ;; todo rewrite using List
