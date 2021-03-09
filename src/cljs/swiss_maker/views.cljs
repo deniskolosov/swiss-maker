@@ -1,6 +1,6 @@
 (ns swiss-maker.views
   (:require ["@material-ui/core" :as mui]
-            ["@material-ui/icons/ExpandMore" :refer [ExpandMoreIcon]]
+            ["@material-ui/icons" :as mui-icons]
             [clojure.string :as str]
             [re-frame.core :as re-frame]
             [reagent.core :as r]
@@ -135,7 +135,7 @@
               [:> mui/FormControl {:variant "outlined"
                                    :disabled (if (= (:result result-map) "") false true)}
                ^{:key white-id}
-               [:> mui/InputLabel {:id "hello-123"} "Result"]
+               [:> mui/InputLabel "Result"]
                [:> mui/Select {:value (:result result-map)
                                :id "result-select"
                                :on-change #(update-result % board-no)
@@ -193,41 +193,43 @@
                           :on-click #(open-modal {:modal-name :edit-player }) } "Add player" ]
           [:> mui/Button {:variant "contained"
                           :on-click #(re-frame/dispatch [::events/start-round tournament-id]) } "Start round" ]]
-         [:> mui/Box {:mt 5}
-          [:> mui/Button
-           {:variant "contained"
-            :color "secondary"
-            :size "small"
-            :on-click #(when (js/confirm "Are you sure? This cannot be undone")
-                         (re-frame/dispatch [::events/delete-tournament tournament-id])
-                         (set! (.. js/window -location -href) "/"))}
-           "Delete tournament"]]
+         [:> mui/Box {:mt 5}]
+         [:> mui/Button
+          {:variant "contained"
+           :color "secondary"
+           :size "small"
+           :on-click #(when (js/confirm "Are you sure? This cannot be undone")
+                        (re-frame/dispatch [::events/delete-tournament tournament-id])
+                        (set! (.. js/window -location -href) "/"))}
+          "Delete tournament"]
 
          ;; display previous results
          [:> mui/Grid {:container true}
-          (let [results @(re-frame/subscribe [::subs/results])
-                expand-more [:> ExpandMoreIcon ]]
-            (for [[round-no results-map] results]
-              ^{:key round-no}
+          (let [results @(re-frame/subscribe [::subs/results])]
 
-              [:> mui/Accordion
-               [:> mui/AccordionSummary {:expand-icon expand-more}
-                [:> mui/Typography (str "Round " round-no " results:")]]
-               [:> mui/AccordionDetails
-                ;; todo rewrite using List
-                (for [[board-id res] results-map]
-                  ^{:key board-id}
-                  [:<>
-                   [:> mui/Box
-                    [:> mui/Typography (str (name board-id) " : ")
-                     (case res
-                       0 (str "1 - 0")
-                       1 (str "0 - 1")
-                       0.5 (str "1/2 - 1/2"))
-                     ]]
-                   ]
-                  )
-                ]]))]
+            [:> mui/Accordion
+             [:> mui/AccordionSummary {:expand-icon (r/as-element [:> mui-icons/ExpandMore])}
+              [:> mui/Typography "Previous rounds results:"]]
+             (for [[round-no results-map] results]
+               ^{:key round-no}
+
+               [:<>
+                [:> mui/Typography (str "Round " round-no " results:")]
+                [:> mui/AccordionDetails
+                 ;; todo rewrite using List
+                 (for [[board-id res] results-map]
+                   ^{:key board-id}
+                   [:<>
+                    [:> mui/Box
+                     [:> mui/Typography (str (name board-id) " : ")
+                      (case res
+                        0 (str "1 - 0")
+                        1 (str "0 - 1")
+                        0.5 (str "1/2 - 1/2"))
+                      ]]
+                    ]
+                   )
+                 ]])])]
 
          ;; display current pairings
          [current-round]

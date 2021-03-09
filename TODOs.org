@@ -86,7 +86,8 @@
    * [X] Add "Finish round" button,
      * [X] Create event which updates results in db from pairings
    * [X] Display previous results in an accordion
-** TODO Create pairings mechanism
+** TODO Fix layout 
+   
 * MISC [0/1] 
 ** TODO Add initial readme
    
