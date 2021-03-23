@@ -1,8 +1,6 @@
 # swiss-maker
 
-A [re-frame](https://github.com/day8/re-frame) application designed to ... well, that part is up to
-you.
-
+A [re-frame](https://github.com/day8/re-frame) application designed to create Swiss tournaments
 ## Getting Started
 
 ### Project Overview
