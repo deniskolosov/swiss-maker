@@ -1,3 +1,4 @@
+#+author: dkol
 * Swiss Maker
   Create swiss tournaments for chess and other games.
   
@@ -87,7 +88,19 @@
      * [X] Create event which updates results in db from pairings
    * [X] Display previous results in an accordion
 ** TODO Fix layout 
-   
+   - [ ] Sort players by score
+** TODO Take data from backend
+   - [X] On start fill db with tournament data from backend
+   - [X] Add event for fetching players
+   - [X] Add event for fetching pairings
+   - [X] On tournament creation send http request to backend
+   - [ ] Take host and port from environment
 * MISC [0/1] 
 ** TODO Add initial readme
    
+   
+   
+
+
+
+  

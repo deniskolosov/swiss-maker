@@ -12,9 +12,9 @@
 (defn hook-browser-navigation! []
   (doto (History.)
     (gevents/listen
-     EventType/NAVIGATE
-     (fn [event]
-       (secretary/dispatch! (.-token ^js event))))
+      EventType/NAVIGATE
+      (fn [event]
+        (secretary/dispatch! (.-token ^js event))))
     (.setEnabled true)))
 
 (defn app-routes []
@@ -30,8 +30,9 @@
 
 
   (defroute "/tournaments/:tournament-id"  [tournament-id]
-    (re-frame/dispatch [::events/set-active-panel {:active-panel :tournament-panel
-                                                   :tournament-id (keyword tournament-id)}]))
+    (re-frame/dispatch [::events/set-active-panel {:active-panel  :tournament-panel
+                                                   :tournament-id (js/parseInt tournament-id)}]))
+
 
 
   ;; --------------------
