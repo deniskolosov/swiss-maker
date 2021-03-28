@@ -3,14 +3,15 @@
    [re-frame.core :as re-frame]))
 
 (re-frame/reg-sub
- ::tournaments
- (fn [db]
-   (:tournaments db)))
+  ::tournaments
+  (fn [db]
+    (:tournaments db)))
+
 
 (re-frame/reg-sub
- ::active-modal
- (fn [db]
-   (:active-modal db)))
+  ::active-modal
+  (fn [db]
+    (:active-modal db)))
 
 (re-frame/reg-sub
  ::active-panel
@@ -54,16 +55,22 @@
    (get players active-player)))
 
 (re-frame/reg-sub
- ::current-round
- :<- [::tournament]
- (fn [tournament _]
-   (:current-round tournament)))
+  ::current-round
+  :<- [::tournament]
+  (fn [tournament _]
+    (:current-round tournament)))
 
 (re-frame/reg-sub
- ::current-pairings
- :<- [::tournament]
- (fn [tournament _]
-   (:pairings tournament)))
+  ::num-of-rounds
+  :<- [::tournament]
+  (fn [tournament _]
+    (:num-of-rounds tournament)))
+
+(re-frame/reg-sub
+  ::current-pairings
+  :<- [::tournament]
+  (fn [tournament _]
+    (:pairings tournament)))
 
 (comment
   (get {:tournament-01 {:id :tournament-01 :players [{:name "Denis"}]}} ::tournament-01))

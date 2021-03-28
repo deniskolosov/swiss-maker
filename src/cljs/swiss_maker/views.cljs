@@ -108,52 +108,52 @@
 
 (defn current-round
   []
-  (let [current-round @(re-frame/subscribe [::subs/current-round])
+  (let [current-round (re-frame/subscribe [::subs/current-round])
         pairings      @(re-frame/subscribe [::subs/current-pairings])
 
         players       @(re-frame/subscribe [::subs/players])
-        tournament-id @(re-frame/subscribe [::subs/active-tournament])
+        tournament-id (re-frame/subscribe [::subs/active-tournament])
         update-result (fn [event board-no]
                         (let [event-value (.. event -target -value)]
                           (.preventDefault event)
                           (when (not= event-value "")
                             (re-frame/dispatch [::events/update-scores {:board-no      board-no
                                                                         :result        event-value
-                                                                        :tournament-id tournament-id}])
-                            (re-frame/dispatch [::events/update-results {:board-no      board-no
-                                                                         :result        event-value
-                                                                         :tournament-id tournament-id}]))))]
+                                                                        :tournament-id @tournament-id}])
+                            (re-frame/dispatch [::events/update-pairings-for-tournament {:round-no      @current-round
+                                                                                         :board-no      board-no
+                                                                                         :result        (float event-value)
+                                                                                         :tournament-id @tournament-id}]))))]
     [:> mui/Grid {:container true}
-     (when (> current-round 0 )
-       [:> mui/Grid {:item true }
-        [:> mui/Typography {:variant "h5"} "Current round pairs:"]
-        [:form {:no-validate true}
-         (for [[board-no result-map] pairings]
-           (let [white-id (:white-id result-map)
-                 black-id (:black-id result-map)]
-             ^{:key white-id}
-             [:> mui/Paper
-              [:> mui/Typography {:variant "body1"}
-               (str "Board #" board-no ": "
-                    (get-in players [white-id :name]) " (white) -- "
-                    (get-in players [black-id :name])" (black)")]
+     [:> mui/Grid {:item true }
+      [:> mui/Typography {:variant "h5"} "Current round pairs:"]
+      [:form {:no-validate true}
+       (for [[board-no result-map] pairings]
+         (let [white-id (:white-id result-map)
+               black-id (:black-id result-map)]
+           ^{:key white-id}
+           [:> mui/Paper
+            [:> mui/Typography {:variant "body1"}
+             (str "Board #" board-no ": "
+                  (get-in players [white-id :name]) " (white) -- "
+                  (get-in players [black-id :name])" (black)")]
 
-              [:> mui/FormControl {:variant  "outlined"
-                                   :disabled (if (= (:result result-map) -1) false true)}
-               [:> mui/InputLabel "Result"]
-               [:> mui/Select {:value     (:result result-map)
-                               :id        "result-select"
-                               :on-change #(update-result % board-no)
-                               :label     "Result"}
+            [:> mui/FormControl {:variant  "outlined"
+                                 :disabled (if (= (:result result-map) -1) false true)}
+             [:> mui/InputLabel "Result"]
+             [:> mui/Select {:value     (:result result-map)
+                             :id        "result-select"
+                             :on-change #(update-result % board-no)
+                             :label     "Result"}
 
-                [:> mui/MenuItem {:value -1} "Select result" ]
-                [:> mui/MenuItem {:value 0} "White won" ]
-                [:> mui/MenuItem {:value 1} "Black won" ]
-                [:> mui/MenuItem {:value 0.5} "Draw" ]]]]))]
-        (when (not= pairings {})
-          [:> mui/Button {:variant  "contained"
-                          :on-click #(re-frame/dispatch [::events/finish-round current-round])} "Finish round"])]
-       )]))
+              [:> mui/MenuItem {:value -1} "Select result" ]
+              [:> mui/MenuItem {:value 0} "White won" ]
+              [:> mui/MenuItem {:value 1} "Black won" ]
+              [:> mui/MenuItem {:value 0.5} "Draw" ]]]]))]
+      (when (not= pairings {})
+        [:> mui/Button {:variant  "contained"
+                        :on-click #(re-frame/dispatch [::events/finish-round @current-round])} "Finish round"])]
+     ]))
 
 
 
@@ -161,26 +161,29 @@
 (defn tournament-panel []
 
   (let [active-tournament (re-frame/subscribe [::subs/tournament])
-        tournament-id     @(re-frame/subscribe [::subs/active-tournament])
-        initial-values    {:player-name ""
-                           :rating      0
-                           :score       0}
-        values            (r/atom initial-values)
-        open-modal        (fn [{:keys [modal-name]}]
-                            (re-frame/dispatch [::events/open-modal modal-name]))
-        save-player       (fn [event {:keys [id player-name rating score]}]
-                            (.preventDefault event)
-                            (re-frame/dispatch [::events/create-players-for-tournament
-                                                {:tournament-id tournament-id
-                                                 :player-name   (str/trim player-name)
-                                                 :rating        (js/parseInt rating)
-                                                 :score         (js/parseInt score)}])
-                            (reset! values initial-values))]
+        tournament-id     (re-frame/subscribe [::subs/active-tournament])
+        num-of-rounds     (re-frame/subscribe [::subs/num-of-rounds])
 
-    (re-frame/dispatch [::events/get-players-for-tournament tournament-id])
+        current-round-no (re-frame/subscribe [::subs/current-round])
+        initial-values   {:player-name ""
+                          :rating      0
+                          :score       0}
+        values           (r/atom initial-values)
+        open-modal       (fn [{:keys [modal-name]}]
+                           (re-frame/dispatch [::events/open-modal modal-name]))
+        save-player      (fn [event {:keys [id player-name rating score]}]
+                           (.preventDefault event)
+                           (re-frame/dispatch [::events/create-players-for-tournament
+                                               {:tournament-id @tournament-id
+                                                :player-name   (str/trim player-name)
+                                                :rating        (js/parseInt rating)
+                                                :score         (js/parseInt score)}])
+                           (reset! values initial-values))]
+
+    (re-frame/dispatch [::events/get-players-for-tournament @tournament-id])
+    (re-frame/dispatch [::events/get-pairings-for-tournament {:tournament-id @tournament-id}])
     (fn []
       (let [{player-id :id player-name :name} @(re-frame/subscribe [::subs/player])
-            current-round-no                  @(re-frame/subscribe [::subs/current-round])
             ]
 
         [:> mui/Grid {:container true}
@@ -204,15 +207,16 @@
 
           [:> mui/Button {:variant  "contained"
                           :on-click #(open-modal {:modal-name :edit-player }) } "Add player" ]
-          [:> mui/Button {:variant  "contained"
-                          :on-click #(re-frame/dispatch [::events/start-round tournament-id current-round-no]) } "Start round" ]]
+          (when-not (= @num-of-rounds @current-round-no)
+            [:> mui/Button {:variant  "contained"
+                            :on-click #(re-frame/dispatch [::events/start-round @tournament-id @current-round-no]) } "Start round" ])]
          [:> mui/Box {:mt 5}]
          [:> mui/Button
           {:variant  "contained"
            :color    "secondary"
            :size     "small"
            :on-click #(when (js/confirm "Are you sure? This cannot be undone")
-                        (re-frame/dispatch [::events/delete-tournament tournament-id])
+                        (re-frame/dispatch [::events/delete-tournament @tournament-id])
                         (set! (.. js/window -location -href) "/"))}
           "Delete tournament"]
 
@@ -225,7 +229,6 @@
               [:> mui/Typography "Previous rounds results:"]]
              (for [[round-no results-map] results]
                ^{:key round-no}
-
                [:<>
                 [:> mui/Typography (str "Round " round-no " results:")]
                 [:> mui/AccordionDetails
@@ -238,14 +241,11 @@
                     (js/console.log "bid" board-id "res" res)
                     [:> mui/Box
                      [:> mui/Typography (str "board " board-id " : ")
-                      (case res
-                        0   (str "1 - 0")
-                        1   (str "0 - 1")
-                        0.5 (str "1/2 - 1/2"))
-                      ]]
-                    ]
-                   )
-                 ]])])]
+                      (when-not (= -1 res)
+                        (case res
+                          0   (str "1 - 0")
+                          1   (str "0 - 1")
+                          0.5 (str "1/2 - 1/2")))]]])]])])]
          ;; display current pairings
          [current-round]
 

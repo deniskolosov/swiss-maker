@@ -94,7 +94,11 @@
    - [X] Add event for fetching players
    - [X] Add event for fetching pairings
    - [X] On tournament creation send http request to backend
-   - [ ] Take host and port from environment
+   - [ ] Take host and port from environment for backend endpoints
+   - [X] replace update scores with put request to players
+   - [X] Update current round in tournament in backend
+   - [ ] Create results endpoint to fill results db on frontend
+   - [ ] Send put to pairings to update results
 * MISC [0/1] 
 ** TODO Add initial readme
    

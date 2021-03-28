@@ -19,22 +19,6 @@
                (assoc accum (keyword (string/replace (name k) "_" "-")) v)) {} m))
 
 (defn prepare-tournaments
-  "
-  Convert from
-  [{
-             'tournament/id':1,
-             'tournament/name':'First tournament',
-             'tournament/num_of_rounds':1,
-             'tournament/current_round':0
-         }]}
-  to
-  [{:tournament-01 {:id :tournament-01
-                   :name 'First tournament'
-                   :current-round 0
-                   :results {}
-                   :pairings {}
-                   :players {}}}]
-  "
   [tournaments-response]
   (into {}
         (map (fn [t]
@@ -48,78 +32,21 @@
                                        )}))  tournaments-response)))
 
 (defn prepare-players
-  "
-  to
-  {:player-01
-  {:id :player-01 :name 'Ivan Ivanov' :rating 1100 :score 0}
-  :player-02
-  {:id :player-02 :name 'Petr Petrov' :rating 1200 :score 0}
-  :player-03
-  {:id :player-03 :name 'Semen Fedorov' :rating 1250 :score 0}
-  :player-04
-  {:id :player-04 :name 'Anatoliy Sidorov' :rating 1600 :score
-  0}
-
-                                 }
-  "
   [players-response]
   (into {}
         (map (fn [p]
                (let [pid    (:player/id p)
                      player (renamer p)]
-
                  {pid player})) players-response)))
 
 (defn prepare-pairings
-  "
-                   :pairings      {:board-1 {:white  :player-01
-                                             :black  :player-02
-                                             :result ''}}
-  "
-
   [pairing-response]
   (into {}
         (map (fn [p]
-               (let [pid     (:pairing/id p)
-                     pairing (renamer p)]
+               (let [board-no (:pairing/board-no p)
+                     pairing  (renamer p)]
 
-                 {pid pairing})) pairing-response)))
-
-(comment
-  (def tournaments {"tournaments" [{
-                                    :tournament/id            1
-                                    :tournament/name          "First tournament"
-                                    :tournament/num_of_rounds 1
-                                    :tournament/current_round 0
-                                    }
-                                   {
-                                    :tournament/id            2
-                                    :tournament/name          "Second tournament"
-                                    :tournament/num_of_rounds 5
-                                    :tournament/current_round 6
-                                    }]})
-  (prepare-tournaments (get tournaments "tournaments"))
-  (def players [ {:player/id            "c6d60a7a-8997-419f-8a34-5edf719f0b5b"
-                  :player/name          "Ivan Ivanov"
-                  :player/rating        1000
-                  :player/current-score 0
-                  :player/tournament-id 1}
-                {:player/id            "d6d60a7a-8997-419f-8a34-5edf719f0b5b"
-                 :player/name          "Petr Petrov"
-                 :player/rating        1200
-                 :player/current-score 3
-                 :player/tournament-id 1}])
-  (prepare-players players)
-
-
-  (def pairings [{:pairing/id       1
-                  :pairing/white-id "c6d60a7a-8997-419f-8a34-5edf719f0b5b"
-                  :pairing/black-id "df2330a4-0f4d-4603-a3a6-502b6a990dd1"
-                  :pairing/board-no 1
-                  :pairing/result   -1 }])
-
-  (prepare-pairings pairings)
-  )
+                 {board-no pairing})) pairing-response)))
 
 (re-frame/reg-event-fx
   ::get-tournaments
@@ -145,12 +72,12 @@
 
 (re-frame/reg-event-fx
   ::get-pairings-for-tournament
-  (fn [{:keys [db]} [_ {:keys [tournament-id round-no]}]]
+  (fn [{:keys [db]} [_ {:keys [tournament-id]}]]
 
-    (js/console.log "in in xhrio" round-no)
+    (js/console.log "in in xhrio" tournament-id )
     {:db         (assoc-in db [:loading :pairings] true)
      :http-xhrio {:method          :get
-                  :uri             (str  pairing-endpoint "/" tournament-id "/" round-no)
+                  :uri             (str  pairing-endpoint "/" tournament-id)
                   :response-format (ajax/json-response-format {:keywords? true})
                   :on-success      [::get-pairings-success]
                   :on-failure      [::endpoint-request-error ::get-pairings-for-tournament]}}))
@@ -168,16 +95,55 @@
                   :on-success      [::get-pairings-success]
                   :on-failure      [::endpoint-request-error ::get-pairings-for-tournament]}}))
 
+(re-frame/reg-event-fx
+  ::update-pairings-for-tournament
+  (fn [{:keys [db]} [_ data]]
+    (js/console.log "in update pairings" data )
+
+    {:db         (assoc-in db [:loading :pairings] true)
+     :http-xhrio {:method          :put
+                  :uri             (str  pairing-endpoint "/" (:tournament-id data))
+                  :format          (ajax/json-request-format)
+                  :params          data
+                  :response-format (ajax/json-response-format {:keywords? true})
+                  :on-success      [::update-results data]
+                  :on-failure      [::endpoint-request-error ::update-pairings-for-tournament]}}))
+
 (re-frame/reg-event-db
   ::get-pairings-success
   (fn [db [_ pairings]]
     (let [pairings      (:pairing pairings)
-          tournament-id (:pairing/tournament-id (first pairings))]
+          tournament-id (:pairing/tournament-id (first pairings))
+          round-no      (:pairing/round-no (:first pairings))]
       (js/console.log "in get pairings" pairings)
       (-> db
           (assoc-in [:loading :pairings] false)
           (assoc-in [:tournaments tournament-id :pairings] (prepare-pairings
-                                                             pairings))))))
+                                                             pairings))
+          (assoc-in [:tournaments tournament-id :results] (into {} (map (fn [p]
+                                                                          {(:pairing/round-no p)
+                                                                           {(:pairing/board-no p)
+                                                                            (:pairing/result p)}})
+                                                                        pairings)))))))
+
+
+(comment
+  ;; pairing resp -> {:round-no {:board-no result}}
+  (def p-resp [{:pairing/id       3
+                :pairing/white-id "sdfs-123"
+                :pairing/black-id "sfsdf22"
+                :pairing/board-no 1
+                :pairing/result   1
+                :pairing/round-no 1}
+               {:pairing/id       4
+                :pairing/white-id "sdfs-123"
+                :pairing/black-id "sfsdf22"
+                :pairing/board-no 1
+                :pairing/result   0.5
+                :pairing/round-no 2}])
+  (into {} ( map (fn [p] {(:pairing/round-no p) {(:pairing/board-no p) (:pairing/result p)}}) p-resp))
+
+  )
 
 (re-frame/reg-event-db
   ::get-tournaments-success
@@ -234,9 +200,11 @@
 
     (let [tournament-id   (get tournament "tournament/id")
           tournament-name (get tournament "tournament/name")
-          num-of-rounds   (get tournament "tournament/num-of-rounds")]
+          num-of-rounds   (get tournament "tournament/num-of-rounds")
+          current-round   (get tournament "tournament/current-round")]
       (-> db (update-in [:tournaments tournament-id] merge {:id            tournament-id
                                                             :name          tournament-name
+                                                            :current-round current-round
                                                             :num-of-rounds num-of-rounds
                                                             :players       []})
           ;; close modal
@@ -280,6 +248,21 @@
                     :on-success      [::upsert-tournament]
                     :on-failure      [::endpoint-request-error ::get-tournaments]}})))
 
+
+(re-frame/reg-event-fx
+  ::update-current-round
+  (fn [{:keys [db]} [_ {:keys [tournament-id current-round]}]]
+    (js/console.log "tid" tournament-id "cur round" current-round)
+    (let [data {:current-round current-round}]
+      {:db         (assoc-in db [:loading :tournaments] true)
+       :http-xhrio {:method          :put
+                    :uri             (str tournament-endpoint "/" tournament-id)
+                    :params          data
+                    :format          (ajax/json-request-format)
+                    :response-format (ajax/json-response-format)
+                    :on-success      [::upsert-tournament]
+                    :on-failure      [::endpoint-request-error ::get-tournaments]}})))
+
 (re-frame/reg-event-fx
   ::create-players-for-tournament
   (fn [{:keys [db]} [_ {:keys [tournament-id player-name rating score]}]]
@@ -295,6 +278,7 @@
                     :on-success      [::upsert-player]
                     :on-failure      [::endpoint-request-error ::create-players-for-tournament]}})))
 
+
 (re-frame/reg-event-db
   ::delete-player
   (fn [db [_ player-id]]
@@ -308,12 +292,14 @@
 
 (re-frame/reg-event-fx
   ::start-round
-  (fn [{:keys [db]} [_ tournament-id current-round]]
-    (js/console.log "HELLO cur round" current-round)
-    {:db       (-> db
-                   (update-in [:tournaments tournament-id :current-round] inc))
-     :dispatch [::create-pairings-for-tournament {:tournament-id tournament-id
-                                                  :round-no      (inc current-round)}]}))
+  (fn [{:keys [db]} [_ tournament-id current-round-no]]
+    (js/console.log "HELLO cur round" current-round-no)
+    {:db         (-> db
+                     (update-in [:tournaments tournament-id :current-round] inc))
+     :dispatch-n [[::create-pairings-for-tournament {:tournament-id tournament-id
+                                                     :round-no      (inc current-round-no)}]
+                  [::update-current-round {:tournament-id tournament-id
+                                           :current-round (inc current-round-no)}]]}))
 
 
 (re-frame/reg-event-db
@@ -328,27 +314,28 @@
                 db players)))))
 
 (re-frame/reg-event-db
-  ::update-results
-  (fn [db [_ {:keys [board-no result tournament-id]}]]
-    (js/console.log (get-in db [:tournaments tournament-id :pairings board-no :result] ))
-    (assoc-in db [:tournaments tournament-id :pairings board-no :result] result)))
+::update-results
+(fn [db [_ {:keys [tournament-id board-no result]}]]
+  (js/console.log "results in update results db event" tournament-id board-no result)
+  (assoc-in db [:tournaments tournament-id :pairings board-no :result] result)
+  ))
 
 (re-frame/reg-event-db
-  ::finish-round
-  (fn [db [_ current-round]]
-    (let [tournament-id (get db :active-tournament)
-          pairings      (get-in db [:tournaments tournament-id :pairings])]
-      (-> db
-          (assoc-in [:tournaments tournament-id :results current-round]
-                    (reduce-kv (fn [acc board-no pairing]
-                                 (assoc-in acc [board-no] (:result pairing))) {} pairings))
-          (assoc-in [:tournaments tournament-id :pairings] {})))))
+::finish-round
+(fn [db [_ current-round]]
+  (let [tournament-id (get db :active-tournament)
+        pairings      (get-in db [:tournaments tournament-id :pairings])]
+    (-> db
+        (assoc-in [:tournaments tournament-id :results current-round]
+                  (reduce-kv (fn [acc board-no pairing]
+                               (assoc-in acc [board-no] (:result pairing))) {} pairings))
+        (assoc-in [:tournaments tournament-id :pairings] {})))))
 
 (comment
-  (reduce #(assoc-in % [(first %2)] (:result (second %2))) {} pairings) ;; was before
-  (def pairs {1 {:result 0} 2 {:result 1}})
-  (reduce-kv (fn [acc board-no pairing]
-               (prn acc board-no pairing)
-               (assoc-in acc [1 board-no] (:result pairing))) {} pairs)
-  (update-in {:foo {1 {:quux 1}}} [:foo 1 :quux]  inc)
-  )
+(reduce #(assoc-in % [(first %2)] (:result (second %2))) {} pairings) ;; was before
+(def pairs {1 {:result 0} 2 {:result 1}})
+(reduce-kv (fn [acc board-no pairing]
+             (prn acc board-no pairing)
+             (assoc-in acc [1 board-no] (:result pairing))) {} pairs)
+(update-in {:foo {1 {:quux 1}}} [:foo 1 :quux]  inc)
+)
